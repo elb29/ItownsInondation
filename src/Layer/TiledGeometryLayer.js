@@ -207,7 +207,9 @@ class TiledGeometryLayer extends GeometryLayer {
         // itownsresearch mod
         if (node.layer.name === 'water') {
             node.material.uniforms.zDisplacement.value = node.layer.zDisplacement;
+
         }
+        node.material.uniforms.waterLevel.value = node.layer.waterLevel;
         // itownsresearch mod over
 
         // do proper culling

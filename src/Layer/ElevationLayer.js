@@ -59,6 +59,15 @@ class ElevationLayer extends Layer {
                 }
             });
         });
+
+        this.waterLevel = 0;
+        this.defineLayerProperty('waterLevel', this.waterLevel || 0.0, (self) => {
+            self.parent.object3d.traverse((obj) => {
+                if (obj.layer == self.parent && obj.material) {
+                    obj.material.waterLevel = this.waterLevel;
+                }
+            });
+        });
     }
 
     update(context, layer, node, parent) {

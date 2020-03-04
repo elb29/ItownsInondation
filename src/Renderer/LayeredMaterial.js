@@ -9,8 +9,20 @@ import Extent from 'Core/Geographic/Extent';
 
 const fullExtent = new THREE.Vector4(-180, -90, 180, 90);
 
-const riskExtent = new THREE.Vector4(0, 0, 0, 0);
+const riskExtent = new THREE.Vector4(-180, -90, 180, 90);
 const riskTexture = new THREE.TextureLoader().load('images/risk.png', (texture) => {
+    fetch('images/risk.wld').then(response => response.text()).then((worldFile) => {
+        texture.extent = new Extent('EPSG:2154', 0, 0, 0, 0).setFromWorldFile(worldFile, texture.image);
+        texture.extent.toVector4(riskExtent);
+
+        riskExtent.x -= 700000;
+        riskExtent.y -= 6600000;
+        riskExtent.z -= 700000;
+        riskExtent.w -= 6600000;
+    });
+});
+
+const riskDegrad = new THREE.TextureLoader().load('images/bleuD.jpg', (texture) => {
     fetch('images/risk.wld').then(response => response.text()).then((worldFile) => {
         texture.extent = new Extent('EPSG:2154', 0, 0, 0, 0).setFromWorldFile(worldFile, texture.image);
         texture.extent.toVector4(riskExtent);
@@ -116,14 +128,14 @@ function updateLayersUniforms(uniforms, olayers, max) {
             if (count < max && t.coords) {
                 let extent = t.coords;
                 if (extent.crs == 'WMTS:PM') {
-                    extent = extent.as('EPSG:3857');
-                    const b = proj_wgs84.a;
+                    extent = extent.as('EPSG:2154');
+                    const b = proj_l93.a;
                     extent.east /= b;
                     extent.west /= b;
                     extent.south /= b;
                     extent.north /= b;
                 } else if (extent.crs == 'WMTS:WGS84') {
-                    extent = extent.as('EPSG:4326');
+                    extent = extent.as('EPSG:2154');
                     extent.east = THREE.Math.degToRad(extent.east);
                     extent.west = THREE.Math.degToRad(extent.west);
                     extent.south = THREE.Math.degToRad(extent.south);
@@ -289,6 +301,8 @@ class LayeredMaterial extends THREE.RawShaderMaterial {
         // best is a small negative number
         setUniformProperty(this, 'minBorderDistance', -0.01);
 
+        setUniformProperty(this, 'waterLevel', 0.0);
+
         // LayeredMaterialLayers
         this.layers = [];
         this.elevationLayerIds = [];
@@ -319,6 +333,7 @@ class LayeredMaterial extends THREE.RawShaderMaterial {
         this.uniforms.proj_lcc = new THREE.Uniform(crs_defintions[CRS_DEFINES.LCC]);
 
         this.uniforms.riskTexture = new THREE.Uniform(riskTexture);
+        // this.uniforms.riskTexture = new THREE.Uniform(riskDegrad);
         this.uniforms.riskExtent = new THREE.Uniform(riskExtent);
     }
 

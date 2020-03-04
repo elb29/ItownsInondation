@@ -22,6 +22,11 @@ uniform lcc_t proj_lcc[2];
 uniform vec4 riskExtent;
 uniform sampler2D riskTexture;
 
+// itownsresearch mod
+uniform float zDisplacement;
+uniform float waterLevel;
+// itownsresearch mod over
+
 void main() {
     #include <logdepthbuf_fragment>
 
@@ -68,10 +73,76 @@ void main() {
     vec2 riskUv = (vLcc[0].xy - riskExtent.xy) / (riskExtent.zw - riskExtent.xy);
     if (riskUv.x > 0. && riskUv.y > 0. && riskUv.x < 1. && riskUv.y < 1.) {
       float risk = (texture2D( riskTexture, riskUv).r * 255. - 1.)/(15. - 1.);
-      if (risk > 1./255.) risk = 1. - risk;
-      gl_FragColor.r = mix(gl_FragColor.r, 1., risk);
-      color = getOutlineColor( vec3(1.), riskUv);
-      gl_FragColor.rgb = mix(gl_FragColor.rgb, color.rgb, color.a);
+
+
+      //if (risk > 1./255.) risk = 1. - risk;
+      //gl_FragColor.b = mix(gl_FragColor.b, 0.75, -risk);
+      //color = getOutlineColor( vec3(1.), riskUv);
+
+      //gl_FragColor.rgb = mix(gl_FragColor.rgb, color.rgb, color.a);
+
+      // IMMERSION :
+
+      // L'EAU == BLEU :
+
+      if (risk<0.00001){
+        gl_FragColor.b = mix(1., 0.5, risk);
+      }
+
+      else if (risk < waterLevel / 18. ) {
+        float r = risk;
+
+        float nivSousEau = (waterLevel/18.) - r;
+
+        if (nivSousEau > 0.0001 && nivSousEau < 0.075){
+          gl_FragColor.g = mix(1., 1., 1.);
+          gl_FragColor.r = mix(1., 1., 1.);
+        }
+        if (nivSousEau > 0.075 && nivSousEau < 0.1){
+          gl_FragColor.g = mix(1., 1., 1.);
+          gl_FragColor.b = mix(1., 1., 1.);
+        }
+        if (nivSousEau > 0.1 && nivSousEau < 0.15){
+          gl_FragColor.g = mix(0.75, 1., 1.);
+          gl_FragColor.b = mix(1., 1., 1.);
+        }
+        if (nivSousEau > 0.15 && nivSousEau < 0.2){
+
+          gl_FragColor.g = mix(0.5, 0.5, 1.);
+          gl_FragColor.b = mix(1., 1., 1.);
+        }
+        if (nivSousEau > 0.20  && nivSousEau < 0.3){
+          gl_FragColor.g = mix(0.25, 0.25,1. );
+          gl_FragColor.b = mix(1., 1., 1.);
+        }
+        if (nivSousEau > 0.3){
+          gl_FragColor.b = mix(1., 1., 1.);
+        }
+
+          if (risk > 1./255.) r = 1. - risk;
+
+
+      }
+
+
+      // FRONTIERE TERRE IMMERGEE / TERRE SUBMERGEE :
+
+      else if (risk < 0.05 + (waterLevel/18.)) {
+        if(risk > (waterLevel/18.)){
+          gl_FragColor.r = mix(1. , 1., risk);
+
+          if (risk > 1./255.) risk = 1. - risk;
+          //gl_FragColor.g = mix(0 , 1., risk);
+          //gl_FragColor.b = mix(0, 1., risk);
+
+          //color = getOutlineColor( vec3(1.), riskUv);
+      }
+      }
+
+
+
+
+
     }
 
 #endif
